@@ -8,7 +8,8 @@
 			"@components/*": ["src/components/*"],
 			"@layouts/*": ["src/layouts/*"],
 			"@assets/*": ["src/assets/*"],
-			"@utils/*": ["src/assets/utils/*"]
+			"@utils/*": ["src/assets/utils/*"],
+			"@lib/*": ["src/lib/*"]
 		},
 		"incremental": true,
 		"skipLibCheck": true
