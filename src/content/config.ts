@@ -1,12 +1,11 @@
-import { z, defineCollection } from "astro:content";
+import { defineCollection } from "astro:content";
+
+import { ServerSchema } from "@lib/schema";
 
 const serversCollection = defineCollection({
 	type: "content",
 	schema: ({ image }) =>
-		z.object({
-			title: z.string(),
-			description: z.string(),
-			date: z.date(),
+		ServerSchema.extend({
 			ogImage: image(),
 		}),
 });
