@@ -6,6 +6,12 @@ import type { RepoInfo } from "./types";
 import { z } from "zod";
 
 /**
+ * Maximum number of repos to scan per topic.
+ * Enforces a boundary on external API calls.
+ */
+const REPO_LIMIT = 100;
+
+/**
  * Fetches repositories from GitHub based on a topic.
  * @param options - Contains the topic to search for.
  * @returns A promise resolving to an array of RepoInfo.
@@ -63,4 +69,186 @@ export async function fetchTopicRepos(options: { topic: string }): Promise<RepoI
 			defaultBranch: item.default_branch,
 		};
 	});
+}
+
+/**
+ * Schema for expected GitHub content API response.
+ * We only need encoding and content.
+ */
+const GithubContentResponseSchema = z.object({
+	encoding: z.literal("base64"),
+	content: z.string().min(1), // Content should not be empty
+});
+
+const FetchFileContentOptionsSchema = z.object({
+	owner: z.string(),
+	repo: z.string(),
+	path: z.string(),
+	ref: z.string().optional(),
+});
+
+/**
+ * Options for fetching file content.
+ */
+type FetchFileContentOptions = z.infer<typeof FetchFileContentOptionsSchema>;
+
+/**
+ * Fetches and decodes content of a specific file from GitHub.
+ * @param options - Repo owner, name, file path, optional ref.
+ * @returns A promise resolving to decoded file content string
+ *          or null if an operational error occurs (e.g., not found).
+ */
+async function fetchFileContent(options: FetchFileContentOptions): Promise<string | null> {
+	const { owner, repo, path, ref } = options;
+	// Assert preconditions: owner, repo, path non-empty strings.
+	FetchFileContentOptionsSchema.parse(options);
+
+	let apiUrl = `https://api.github.com/repos/${owner}/${repo}` + `/contents/${path}`;
+	if (ref) {
+		apiUrl += `?ref=${ref}`;
+	}
+
+	const headers: HeadersInit = {
+		Accept: "application/vnd.github.v3+json",
+	};
+	// if (token) { headers["Authorization"] = `Bearer ${token}`; }
+
+	try {
+		const response = await cachedFetch(apiUrl, { method: "GET", headers });
+
+		// Assert intermediate state: response should exist.
+		assert.truthy(response, "Fetch API did not return a response");
+
+		// Handle operational errors (404 Not Found is expected).
+		if (response.status === 404) {
+			// console.log(`File not found: ${path} in ${owner}/${repo}`);
+			return null;
+		}
+
+		// Handle other non-OK statuses as operational errors.
+		if (!response.ok) {
+			const errorText = await response.text();
+			console.error(
+				`HTTP error fetching content for ${path} in ` +
+					`${owner}/${repo}: ${response.status}\nMessage: ${errorText}`,
+			);
+			return null;
+		}
+
+		const rawData = await response.json();
+		const { data } = GithubContentResponseSchema.safeParse(rawData);
+
+		// Assert intermediate state after validation.
+		assert.truthy(data?.encoding === "base64", "Encoding must be base64");
+		assert.nonEmptyString(data?.content, "Content must be a non-empty string");
+
+		// Decode the content.
+		const decodedContent = Buffer.from(data.content, "base64").toString("utf-8");
+
+		// Assert postcondition: decoded content is a string.
+		assert.string(decodedContent, "Decoded content invalid");
+
+		return decodedContent;
+	} catch (error) {
+		// Catch fetch/network/Buffer errors - operational.
+		console.error(`Error fetching file content for ${path} in ${owner}/${repo}:`, error);
+		return null; // Indicate failure gracefully.
+	}
+}
+
+/**
+ * Main execution logic for finding potential MCP servers.
+ */
+export async function findPotentialServers(): Promise<void> {
+	// Fetch initial list of repositories.
+	const repos = await fetchTopicRepos({ topic: "mcp" });
+	// Assert state after fetch.
+	assert.nonEmptyArray(repos, "fetchTopicRepos should return array");
+
+	const potentialServers: RepoInfo[] = [];
+
+	// Limit iteration based on REPO_LIMIT.
+	const reposToCheck = repos.slice(0, REPO_LIMIT);
+
+	for (const repo of reposToCheck) {
+		// Assert loop invariant: repo object structure.
+		z.object({
+			id: z.number(),
+			name: z.string(),
+			description: z.string().nullable(),
+			owner: z.object({ login: z.string() }),
+			html_url: z.string(),
+			default_branch: z.string(),
+		}).parse(repo);
+
+		console.log(`Checking ${repo.owner}/${repo.name}...`);
+
+		// Fetch package.json content.
+		const pkgJsonContent = await fetchFileContent({
+			owner: repo.owner,
+			repo: repo.name,
+			path: "package.json",
+			ref: repo.defaultBranch,
+		});
+
+		// Handle expected case: package.json not found (operational).
+		if (pkgJsonContent === null) {
+			console.log(` -> No package.json found.`);
+			continue; // Move to the next repository.
+		}
+
+		// Assert state: if not null, must be a string.
+		assert.string(pkgJsonContent, "pkgJsonContent should be string if not null");
+
+		try {
+			// Parse the JSON content.
+			const pkg = z
+				.object({
+					bin: z.object({}).optional(),
+					dependencies: z.record(z.string(), z.string()).optional(),
+					devDependencies: z.record(z.string(), z.string()).optional(),
+				})
+				.parse(JSON.parse(pkgJsonContent));
+
+			// Check for criteria: presence of 'bin' and SDK dependency.
+			// These checks use boolean coercion, which is acceptable here.
+			const hasBin = !!pkg.bin;
+			const hasSdkDep =
+				!!pkg.dependencies?.["@modelcontextprotocol/sdk"] ||
+				!!pkg.devDependencies?.["@modelcontextprotocol/sdk"];
+
+			if (hasBin && hasSdkDep) {
+				console.log(` --> Found potential server!`);
+				potentialServers.push(repo);
+			} else {
+				console.log(` -> Does not meet criteria (bin: ${hasBin}, sdk: ${hasSdkDep})`);
+			}
+		} catch (e) {
+			// Handle JSON parsing error (operational error: invalid file).
+			console.error(
+				` -> Error parsing package.json for ` + `${repo.owner}/${repo.name}:`,
+				e instanceof Error ? e.message : String(e),
+			);
+			// Continue to the next repo despite parsing error.
+		}
+	}
+
+	// Assert final state before output.
+	assert.nonEmptyArray(potentialServers, "potentialServers should be non-empty array");
+
+	// --- Output Results ---
+	console.log("\n--- Potential MCP Servers Found ---");
+	potentialServers.forEach((server) => {
+		// Assert invariant during output loop.
+		assert.string(server.owner, "Server owner invalid");
+		assert.string(server.name, "Server name invalid");
+		assert.string(server.repoUrl, "Server URL invalid");
+		console.log(`- ${server.owner}/${server.name} (${server.repoUrl})`);
+	});
+
+	const checkedCount = Math.min(repos.length, REPO_LIMIT);
+	console.log(
+		`------------------------------------\nChecked ${checkedCount} ` +
+			`repositories. Found ${potentialServers.length}.`,
+	);
 }
