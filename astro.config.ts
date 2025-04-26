@@ -5,7 +5,6 @@ import vercel from "@astrojs/vercel/serverless";
 
 const config: AstroUserConfig = defineConfig({
 	site: "https://example.com",
-	output: "hybrid",
 	adapter: vercel(),
 	integrations: [
 		tailwind({
