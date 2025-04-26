@@ -1,16 +1,26 @@
-import { GitHubSearchResponseSchema } from "./github-schema";
+import { GitHubSearchResponseSchema, ItemSchema } from "./github-schema";
 
 import { assert } from "@sindresorhus/is";
 import { cachedFetch } from "./utils";
-import type { RepoInfo } from "./types";
 import { z } from "zod";
+
+const MiniItemSchema = ItemSchema.pick({
+	id: true,
+	name: true,
+	description: true,
+	owner: true,
+	html_url: true,
+	default_branch: true,
+});
+
+type MiniItem = z.infer<typeof MiniItemSchema>;
 
 /**
  * Fetches repositories from GitHub based on a topic.
  * @param options - Contains the topic to search for.
  * @returns A promise resolving to an array of RepoInfo.
  */
-export async function fetchTopicRepos(options: { topic: string }): Promise<RepoInfo[]> {
+export async function fetchTopicRepos(options: { topic: string }): Promise<MiniItem[]> {
 	const { topic } = options;
 	// Assert preconditions: topic must be a non-empty string.
 	assert.nonEmptyString(topic, "topic must not be empty");
@@ -45,23 +55,16 @@ export async function fetchTopicRepos(options: { topic: string }): Promise<RepoI
 	// Map to our defined RepoInfo structure.
 	return data.items.map((item) => {
 		// Assert item structure during mapping.
-		z.object({
-			id: z.number(),
-			name: z.string(),
-			description: z.string().nullable(),
-			owner: z.object({ login: z.string() }),
-			html_url: z.string(),
-			default_branch: z.string(),
-		}).parse(item);
+		MiniItemSchema.parse(item);
 
 		return {
 			id: item.id,
 			name: item.name,
 			description: item.description, // Can be null
-			owner: item.owner.login,
-			repoUrl: item.html_url,
-			defaultBranch: item.default_branch,
-		};
+			owner: item.owner,
+			html_url: item.html_url,
+			default_branch: item.default_branch,
+		} satisfies MiniItem;
 	});
 }
 
@@ -159,30 +162,23 @@ export async function findPotentialServers(options: { repoLimit: number }): Prom
 	// Assert state after fetch.
 	assert.nonEmptyArray(repos, "fetchTopicRepos should return array");
 
-	const potentialServers: RepoInfo[] = [];
+	const potentialServers: MiniItem[] = [];
 
 	// Limit iteration based on REPO_LIMIT.
 	const reposToCheck = repos.slice(0, options.repoLimit);
 
 	for (const repo of reposToCheck) {
 		// Assert loop invariant: repo object structure.
-		z.object({
-			id: z.number(),
-			name: z.string(),
-			description: z.string().nullable(),
-			owner: z.object({ login: z.string() }),
-			html_url: z.string(),
-			default_branch: z.string(),
-		}).parse(repo);
+		MiniItemSchema.parse(repo);
 
 		console.log(`Checking ${repo.owner}/${repo.name}...`);
 
 		// Fetch package.json content.
 		const pkgJsonContent = await fetchFileContent({
-			owner: repo.owner,
+			owner: repo.owner.login,
 			repo: repo.name,
 			path: "package.json",
-			ref: repo.defaultBranch,
+			ref: repo.default_branch,
 		});
 
 		// Handle expected case: package.json not found (operational).
@@ -233,11 +229,7 @@ export async function findPotentialServers(options: { repoLimit: number }): Prom
 	// --- Output Results ---
 	console.log("\n--- Potential MCP Servers Found ---");
 	potentialServers.forEach((server) => {
-		// Assert invariant during output loop.
-		assert.string(server.owner, "Server owner invalid");
-		assert.string(server.name, "Server name invalid");
-		assert.string(server.repoUrl, "Server URL invalid");
-		console.log(`- ${server.owner}/${server.name} (${server.repoUrl})`);
+		console.log(`- ${server.owner}/${server.name} (${server.html_url})`);
 	});
 
 	const checkedCount = Math.min(repos.length, options.repoLimit);
