@@ -156,15 +156,18 @@ export const GitHubSearchResponseSchema = z.object({
 });
 export type GitHubSearchResponse = z.infer<typeof GitHubSearchResponseSchema>;
 
+const GithubTreeItemTypeSchema = z.enum(["blob", "tree", "commit"]);
+export type GithubTreeItemType = z.infer<typeof GithubTreeItemTypeSchema>;
+
 export const TreeSchema = z.object({
 	path: z.string(),
 	mode: z.string(),
-	type: TypeSchema,
+	type: GithubTreeItemTypeSchema,
 	sha: z.string(),
 	url: z.string(),
 	size: z.number().optional(),
 });
-export type Tree = z.infer<typeof TreeSchema>;
+export type GithubTreeItem = z.infer<typeof TreeSchema>;
 
 export const GitHubTreeResponseSchema = z.object({
 	sha: z.string(),
