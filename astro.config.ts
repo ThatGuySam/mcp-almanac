@@ -1,11 +1,11 @@
 import { defineConfig } from "astro/config";
 import type { AstroUserConfig } from "astro/config";
 import tailwind from "@astrojs/tailwind";
-import vercel from "@astrojs/vercel/serverless";
+import netlify from "@astrojs/netlify";
 
 const config: AstroUserConfig = defineConfig({
 	site: "https://example.com",
-	adapter: vercel(),
+	adapter: netlify(),
 	integrations: [
 		tailwind({
 			applyBaseStyles: false,
