@@ -1,30 +1,18 @@
 import * as z from "zod";
 
-export const DefaultBranchSchema = z.enum(["main", "master", "8.0"]);
+export const DefaultBranchSchema = z.string();
 export type DefaultBranch = z.infer<typeof DefaultBranchSchema>;
 
-export const KeySchema = z.enum(["agpl-3.0", "apache-2.0", "bsd-3-clause", "mit", "other"]);
+export const KeySchema = z.string();
 export type Key = z.infer<typeof KeySchema>;
 
-export const NameSchema = z.enum([
-	"Apache License 2.0",
-	'BSD 3-Clause "New" or "Revised" License',
-	"GNU Affero General Public License v3.0",
-	"MIT License",
-	"Other",
-]);
+export const NameSchema = z.string();
 export type Name = z.infer<typeof NameSchema>;
 
 export const NodeIdSchema = z.string();
 export type NodeId = z.infer<typeof NodeIdSchema>;
 
-export const SpdxIdSchema = z.enum([
-	"AGPL-3.0",
-	"Apache-2.0",
-	"BSD-3-Clause",
-	"MIT",
-	"NOASSERTION",
-]);
+export const SpdxIdSchema = z.string();
 export type SpdxId = z.infer<typeof SpdxIdSchema>;
 
 export const TypeSchema = z.enum(["Organization", "User"]);
@@ -119,7 +107,7 @@ export const ItemSchema = z.object({
 	ssh_url: z.string(),
 	clone_url: z.string(),
 	svn_url: z.string(),
-	homepage: z.string(),
+	homepage: z.string().nullable(),
 	size: z.number(),
 	stargazers_count: z.number(),
 	watchers_count: z.number(),
