@@ -190,36 +190,28 @@ export async function findPotentialServers(options: { repoLimit: number }): Prom
 		// Assert state: if not null, must be a string.
 		assert.string(pkgJsonContent, "pkgJsonContent should be string if not null");
 
-		try {
-			// Parse the JSON content.
-			const pkg = z
-				.object({
-					bin: z.object({}).optional(),
-					dependencies: z.record(z.string(), z.string()).optional(),
-					devDependencies: z.record(z.string(), z.string()).optional(),
-				})
-				.parse(JSON.parse(pkgJsonContent));
+		const rawJson = JSON.parse(pkgJsonContent);
 
-			// Check for criteria: presence of 'bin' and SDK dependency.
-			// These checks use boolean coercion, which is acceptable here.
-			const hasBin = !!pkg.bin;
-			const hasSdkDep =
-				!!pkg.dependencies?.["@modelcontextprotocol/sdk"] ||
-				!!pkg.devDependencies?.["@modelcontextprotocol/sdk"];
+		// Parse the JSON content.
+		const pkg = z
+			.object({
+				bin: z.union([z.string(), z.record(z.string(), z.string())]).optional(),
+				dependencies: z.record(z.string(), z.string()).optional(),
+				devDependencies: z.record(z.string(), z.string()).optional(),
+			})
+			.parse(rawJson);
+		// Check for criteria: presence of 'bin' and SDK dependency.
+		// These checks use boolean coercion, which is acceptable here.
+		const hasBin = !!pkg.bin;
+		const hasSdkDep =
+			!!pkg.dependencies?.["@modelcontextprotocol/sdk"] ||
+			!!pkg.devDependencies?.["@modelcontextprotocol/sdk"];
 
-			if (hasBin && hasSdkDep) {
-				console.log(` --> Found potential server!`);
-				potentialServers.push(repo);
-			} else {
-				console.log(` -> Does not meet criteria (bin: ${hasBin}, sdk: ${hasSdkDep})`);
-			}
-		} catch (e) {
-			// Handle JSON parsing error (operational error: invalid file).
-			console.error(
-				` -> Error parsing package.json for ` + `${repo.owner}/${repo.name}:`,
-				e instanceof Error ? e.message : String(e),
-			);
-			// Continue to the next repo despite parsing error.
+		if (hasBin && hasSdkDep) {
+			console.log(` --> Found potential server!`);
+			potentialServers.push(repo);
+		} else {
+			console.log(` -> Does not meet criteria (bin: ${hasBin}, sdk: ${hasSdkDep})`);
 		}
 	}
 
