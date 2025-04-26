@@ -9,6 +9,12 @@ import { getServerEntries } from "../src/lib/collections";
 import { cachedFetch } from "@lib/utils";
 import { findPotentialServers } from "@lib/github";
 
+/**
+ * Maximum number of repos to scan per topic.
+ * Enforces a boundary on external API calls.
+ */
+const REPO_LIMIT = 100;
+
 // Ensure servers are loaded before proceeding.
 // This acts as an early check for required data.
 const servers = await getServerEntries();
@@ -90,7 +96,7 @@ async function fetchRepoStructure(
 // --- Script Entry Point ---
 (async () => {
 	try {
-		await findPotentialServers();
+		await findPotentialServers({ repoLimit: REPO_LIMIT });
 		process.exit(0); // Explicit success exit code.
 	} catch (error) {
 		// Catch unexpected errors (like assertion failures)

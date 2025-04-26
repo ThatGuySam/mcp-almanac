@@ -6,12 +6,6 @@ import type { RepoInfo } from "./types";
 import { z } from "zod";
 
 /**
- * Maximum number of repos to scan per topic.
- * Enforces a boundary on external API calls.
- */
-const REPO_LIMIT = 100;
-
-/**
  * Fetches repositories from GitHub based on a topic.
  * @param options - Contains the topic to search for.
  * @returns A promise resolving to an array of RepoInfo.
@@ -159,7 +153,7 @@ async function fetchFileContent(options: FetchFileContentOptions): Promise<strin
 /**
  * Main execution logic for finding potential MCP servers.
  */
-export async function findPotentialServers(): Promise<void> {
+export async function findPotentialServers(options: { repoLimit: number }): Promise<void> {
 	// Fetch initial list of repositories.
 	const repos = await fetchTopicRepos({ topic: "mcp" });
 	// Assert state after fetch.
@@ -168,7 +162,7 @@ export async function findPotentialServers(): Promise<void> {
 	const potentialServers: RepoInfo[] = [];
 
 	// Limit iteration based on REPO_LIMIT.
-	const reposToCheck = repos.slice(0, REPO_LIMIT);
+	const reposToCheck = repos.slice(0, options.repoLimit);
 
 	for (const repo of reposToCheck) {
 		// Assert loop invariant: repo object structure.
@@ -246,7 +240,7 @@ export async function findPotentialServers(): Promise<void> {
 		console.log(`- ${server.owner}/${server.name} (${server.repoUrl})`);
 	});
 
-	const checkedCount = Math.min(repos.length, REPO_LIMIT);
+	const checkedCount = Math.min(repos.length, options.repoLimit);
 	console.log(
 		`------------------------------------\nChecked ${checkedCount} ` +
 			`repositories. Found ${potentialServers.length}.`,
