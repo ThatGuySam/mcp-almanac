@@ -2,218 +2,299 @@
  * $ pnpm tsx scripts/update.ts
  */
 
+import assert from "node:assert/strict";
 import { GitHubSearchResponseSchema, GitHubTreeResponseSchema } from "@lib/github-schema";
 import type { GithubTreeItem } from "@lib/github-schema";
 import { getServerEntries } from "../src/lib/collections";
 import { z } from "zod";
 
 /**
- * Maximum number of repos to scan
+ * Maximum number of repos to scan per topic.
+ * Enforces a boundary on external API calls.
  */
 const REPO_LIMIT = 10;
 
-const servers = await getServerEntries();
+/**
+ * Represents the core details of a GitHub repository
+ * relevant to this script.
+ */
+interface RepoInfo {
+	id: number;
+	name: string;
+	description: string | null;
+	owner: string;
+	repoUrl: string;
+	defaultBranch: string;
+}
 
-async function fetchTopicRepos(topic: string) {
-	const response = await fetch(`https://api.github.com/search/repositories?q=topic:${topic}`, {
-		headers: {
-			Accept: "application/vnd.github.mercy-preview+json",
-		},
-	});
+// Ensure servers are loaded before proceeding.
+// This acts as an early check for required data.
+const servers = await getServerEntries();
+assert(Array.isArray(servers), "getServerEntries should return an array");
+
+/**
+ * Fetches repositories from GitHub based on a topic.
+ * @param options - Contains the topic to search for.
+ * @returns A promise resolving to an array of RepoInfo.
+ */
+async function fetchTopicRepos(options: { topic: string }): Promise<RepoInfo[]> {
+	const { topic } = options;
+	// Assert preconditions: topic must be a non-empty string.
+	assert(typeof topic === "string", "topic must be a string");
+	assert(topic.length > 0, "topic must not be empty");
+
+	const apiUrl = `https://api.github.com/search/repositories?q=topic:${topic}`;
+	const headers: HeadersInit = {
+		Accept: "application/vnd.github.mercy-preview+json",
+	};
+
+	const response = await fetch(apiUrl, { headers });
+
+	// Assert intermediate state: response should be ok.
+	// This distinguishes programmer error (bad fetch setup)
+	// from operational error (GitHub API issue).
+	assert(response.ok, `GitHub API fetch failed: ${response.status}`);
+
+	// Handle expected operational error.
 	if (!response.ok) {
-		throw new Error(`Failed to fetch topic repos: ${response.statusText}`);
+		// Log details for debugging potential API issues.
+		console.error(
+			`Failed to fetch topic repos for ${topic}: ` + `${response.status} ${response.statusText}`,
+		);
+		// Provide a clearer error message upwards.
+		throw new Error(`GitHub API error for topic ${topic}: ${response.status}`);
 	}
 
-	const data = GitHubSearchResponseSchema.parse(await response.json());
+	const rawData = await response.json();
+	const validationResult = GitHubSearchResponseSchema.safeParse(rawData);
 
-	console.log(data.items[0]);
+	// Assert successful validation: ensures the API contract holds.
+	assert(validationResult.success, "GitHub search response failed Zod validation");
 
-	return data.items.map((item) => ({
-		id: item.id,
-		name: item.name,
-		description: item.description,
-		owner: item.owner.login,
-		repoUrl: item.html_url,
-		defaultBranch: item.default_branch,
-	}));
+	const data = validationResult.data;
+	// Assert postcondition: items must be an array.
+	assert(Array.isArray(data.items), "Expected items to be an array");
+
+	// Map to our defined RepoInfo structure.
+	return data.items.map((item) => {
+		// Assert item structure during mapping.
+		assert(typeof item.id === "number", "Item id must be number");
+		assert(typeof item.name === "string", "Item name must be string");
+		assert(item.name.length > 0, "Item name must not be empty");
+		assert(typeof item.owner?.login === "string", "Item owner login must be string");
+		assert(item.owner.login.length > 0, "Item owner login must not be empty");
+		assert(typeof item.html_url === "string", "Item html_url must be string");
+		assert(item.html_url.length > 0, "Item html_url must not be empty");
+		assert(typeof item.default_branch === "string", "Item default_branch must be string");
+		assert(item.default_branch.length > 0, "Item default_branch must not be empty");
+
+		return {
+			id: item.id,
+			name: item.name,
+			description: item.description, // Can be null
+			owner: item.owner.login,
+			repoUrl: item.html_url,
+			defaultBranch: item.default_branch,
+		};
+	});
+}
+
+/**
+ * Options for fetching repository structure.
+ */
+interface FetchRepoStructureOptions {
+	owner: string;
+	repo: string;
+	branch: string;
+	// token?: string; // Auth token not currently used
 }
 
 /**
  * Fetches the recursive file structure (tree) of a GitHub
- * repository branch using the fetch API.
- * @param options - The repository owner, name, branch, and
- *                  optional auth token.
- * @returns A promise that resolves to the array of tree
- *          items or null if an error occurs.
+ * repository branch.
+ * @param options - Repo owner, name, and branch.
+ * @returns A promise resolving to the tree items or null
+ *          if an operational error occurs (e.g., repo not found).
  */
-async function fetchRepoStructure(options: {
-	owner: string;
-	repo: string;
-	branch: string;
-}): Promise<GithubTreeItem[] | null> {
+async function fetchRepoStructure(
+	options: FetchRepoStructureOptions,
+): Promise<GithubTreeItem[] | null> {
 	const { owner, repo, branch } = options;
+	// Assert preconditions: owner, repo, branch are non-empty strings.
+	assert(typeof owner === "string" && owner.length > 0, "owner invalid");
+	assert(typeof repo === "string" && repo.length > 0, "repo invalid");
+	assert(typeof branch === "string" && branch.length > 0, "branch invalid");
 
-	// Construct the API URL for the Git Trees endpoint
-	// with the recursive flag.
 	const apiUrl =
 		`https://api.github.com/repos/${owner}/${repo}` + `/git/trees/${branch}?recursive=1`;
-
-	// Set up the necessary headers for the GitHub API.
-	const requestHeaders: HeadersInit = {
+	const headers: HeadersInit = {
 		Accept: "application/vnd.github.v3+json",
 	};
-
-	// Add Authorization header if a token is provided.
-	// if (token) {
-	// 	requestHeaders["Authorization"] = `Bearer ${token}`;
-	// }
+	// if (token) { headers["Authorization"] = `Bearer ${token}`; }
 
 	try {
-		const response = await fetch(apiUrl, {
-			method: "GET", // GET is default, but explicit is fine
-			headers: requestHeaders,
-		});
+		const response = await fetch(apiUrl, { method: "GET", headers });
 
+		// Assert intermediate state: response should exist.
+		assert(response, "Fetch API did not return a response");
+
+		// Handle expected operational errors (like 404 Not Found).
 		if (!response.ok) {
-			// Log detailed error if response is not OK.
 			const errorText = await response.text();
-			console.error(`HTTP error! Status: ${response.status}` + `\nMessage: ${errorText}`);
-			throw new Error(`Failed to fetch repo structure: ${response.status}`);
+			console.error(
+				`HTTP error fetching tree for ${owner}/${repo}: ` +
+					`${response.status}\nMessage: ${errorText}`,
+			);
+			// Return null for operational errors, don't assert/crash.
+			return null;
 		}
 
-		// Parse the JSON response.
-		const data = GitHubTreeResponseSchema.parse(await response.json());
+		const rawData = await response.json();
+		const validationResult = GitHubTreeResponseSchema.safeParse(rawData);
 
-		// Warn if the returned tree was too large and got truncated.
+		// Assert successful validation.
+		assert(validationResult.success, "GitHub tree response failed Zod validation");
+
+		const data = validationResult.data;
+		// Assert postcondition: tree must be an array.
+		assert(Array.isArray(data.tree), "Expected tree to be an array");
+
 		if (data.truncated) {
-			console.warn(`Warning: Fetched tree for ${owner}/${repo} ` + `was truncated by GitHub API.`);
+			// This is an API limitation, not an error our code caused.
+			console.warn(`Warning: Fetched tree for ${owner}/${repo} was truncated.`);
 		}
 
 		return data.tree;
 	} catch (error) {
+		// Catch fetch/network errors - these are operational.
 		console.error(`Error fetching repo structure for ${owner}/${repo}:`, error);
-		return null; // Return null to indicate failure.
+		return null; // Indicate failure gracefully.
 	}
 }
 
 /**
- * Schema for the GitHub Get Content API response.
- * We only care about the content and encoding for now.
+ * Schema for expected GitHub content API response.
+ * We only need encoding and content.
  */
 const GithubContentResponseSchema = z.object({
-	// We expect base64 encoding for files like package.json
 	encoding: z.literal("base64"),
-	// The actual base64 encoded content
-	content: z.string(),
-	// Other fields exist but are ignored here:
-	// name, path, sha, size, url, html_url, git_url,
-	// download_url, type, _links
+	content: z.string().min(1), // Content should not be empty
 });
 
 /**
- * Options for fetching a file's content from GitHub.
+ * Options for fetching file content.
  */
 interface FetchFileContentOptions {
 	owner: string;
 	repo: string;
-	path: string; // Path to the file, e.g., "package.json"
-	ref?: string; // Optional branch, tag, or commit SHA
-	token?: string; // Optional GitHub token for auth
+	path: string;
+	ref?: string;
+	// token?: string; // Auth token not currently used
 }
 
 /**
- * Fetches the content of a specific file from a GitHub
- * repository using the fetch API.
- * @param options - Repository owner, name, file path,
- *                  optional ref, and optional auth token.
- * @returns A promise that resolves to the file content
- *          (decoded string) or null if an error occurs
- *          or the file is not found/valid.
+ * Fetches and decodes content of a specific file from GitHub.
+ * @param options - Repo owner, name, file path, optional ref.
+ * @returns A promise resolving to decoded file content string
+ *          or null if an operational error occurs (e.g., not found).
  */
 async function fetchFileContent(options: FetchFileContentOptions): Promise<string | null> {
-	const { owner, repo, path, ref, token } = options;
+	const { owner, repo, path, ref } = options;
+	// Assert preconditions: owner, repo, path non-empty strings.
+	assert(typeof owner === "string" && owner.length > 0, "owner invalid");
+	assert(typeof repo === "string" && repo.length > 0, "repo invalid");
+	assert(typeof path === "string" && path.length > 0, "path invalid");
+	assert(
+		ref === undefined || (typeof ref === "string" && ref.length > 0),
+		"ref must be undefined or a non-empty string",
+	);
 
-	// Construct the API URL for the Get Contents endpoint.
 	let apiUrl = `https://api.github.com/repos/${owner}/${repo}` + `/contents/${path}`;
 	if (ref) {
 		apiUrl += `?ref=${ref}`;
 	}
 
-	// Set up the necessary headers for the GitHub API.
-	const requestHeaders: HeadersInit = {
-		// Standard v3 API header is fine here.
+	const headers: HeadersInit = {
 		Accept: "application/vnd.github.v3+json",
 	};
-
-	// Add Authorization header if a token is provided.
-	if (token) {
-		requestHeaders["Authorization"] = `Bearer ${token}`;
-	}
+	// if (token) { headers["Authorization"] = `Bearer ${token}`; }
 
 	try {
-		const response = await fetch(apiUrl, {
-			method: "GET",
-			headers: requestHeaders,
-		});
+		const response = await fetch(apiUrl, { method: "GET", headers });
 
-		// 404 specifically means the file wasn't found.
+		// Assert intermediate state: response should exist.
+		assert(response, "Fetch API did not return a response");
+
+		// Handle operational errors (404 Not Found is expected).
 		if (response.status === 404) {
-			// console.log(
-			// 	`File not found: ${path} in ${owner}/${repo}` +
-			// 		(ref ? ` at ref ${ref}` : ""),
-			// );
+			// console.log(`File not found: ${path} in ${owner}/${repo}`);
 			return null;
 		}
 
+		// Handle other non-OK statuses as operational errors.
 		if (!response.ok) {
 			const errorText = await response.text();
 			console.error(
 				`HTTP error fetching content for ${path} in ` +
-					`${owner}/${repo}! Status: ${response.status}` +
-					`\nMessage: ${errorText}`,
+					`${owner}/${repo}: ${response.status}\nMessage: ${errorText}`,
 			);
-			// Don't throw, just return null for non-404 errors too
 			return null;
 		}
 
-		// Parse and validate the JSON response structure.
 		const rawData = await response.json();
 		const validationResult = GithubContentResponseSchema.safeParse(rawData);
 
-		if (!validationResult.success) {
-			console.error(
-				`Invalid API response structure for ${path} in ` + `${owner}/${repo}:`,
-				validationResult.error.errors,
-			);
-			return null;
-		}
+		// Assert successful validation.
+		assert(validationResult.success, "GitHub content response failed Zod validation");
 
 		const data = validationResult.data;
+		// Assert intermediate state after validation.
+		assert(data.encoding === "base64", "Encoding must be base64");
+		assert(
+			typeof data.content === "string" && data.content.length > 0,
+			"Content must be a non-empty string",
+		);
 
-		// Decode the Base64 content.
-		// Need Buffer for base64 decoding in Node.js.
-		return Buffer.from(data.content, "base64").toString("utf-8");
+		// Decode the content.
+		const decodedContent = Buffer.from(data.content, "base64").toString("utf-8");
+
+		// Assert postcondition: decoded content is a string.
+		assert(typeof decodedContent === "string", "Decoded content invalid");
+
+		return decodedContent;
 	} catch (error) {
-		console.error(`Error fetching file content for ${path} ` + `in ${owner}/${repo}:`, error);
-		return null; // Return null to indicate failure.
+		// Catch fetch/network/Buffer errors - operational.
+		console.error(`Error fetching file content for ${path} in ${owner}/${repo}:`, error);
+		return null; // Indicate failure gracefully.
 	}
 }
 
-(async () => {
-	const repos = await fetchTopicRepos("mcp");
+/**
+ * Main execution logic for finding potential MCP servers.
+ */
+async function findPotentialServers(): Promise<void> {
+	// Fetch initial list of repositories.
+	const repos = await fetchTopicRepos({ topic: "mcp" });
+	// Assert state after fetch.
+	assert(Array.isArray(repos), "fetchTopicRepos should return array");
 
-	// const repo = await fetchRepoStructure({
-	// 	owner: repos[0].owner,
-	// 	repo: repos[0].name,
-	// 	branch: repos[0].defaultBranch,
-	// });
+	const potentialServers: RepoInfo[] = [];
 
-	// console.log({ repo });
+	// Limit iteration based on REPO_LIMIT.
+	const reposToCheck = repos.slice(0, REPO_LIMIT);
+	// Assert loop boundary condition.
+	assert(reposToCheck.length <= REPO_LIMIT, "Loop limit check failed");
 
-	const potentialServers = [];
+	for (const repo of reposToCheck) {
+		// Assert loop invariant: repo object structure.
+		assert(typeof repo === "object" && repo !== null, "Repo is null");
+		assert(typeof repo.owner === "string", "Repo owner invalid");
+		assert(typeof repo.name === "string", "Repo name invalid");
+		assert(typeof repo.defaultBranch === "string", "Repo branch invalid");
 
-	for (const repo of repos.slice(0, REPO_LIMIT)) {
 		console.log(`Checking ${repo.owner}/${repo.name}...`);
+
+		// Fetch package.json content.
 		const pkgJsonContent = await fetchFileContent({
 			owner: repo.owner,
 			repo: repo.name,
@@ -221,19 +302,27 @@ async function fetchFileContent(options: FetchFileContentOptions): Promise<strin
 			ref: repo.defaultBranch,
 		});
 
-		if (!pkgJsonContent) {
+		// Handle expected case: package.json not found (operational).
+		if (pkgJsonContent === null) {
 			console.log(` -> No package.json found.`);
-			continue;
+			continue; // Move to the next repository.
 		}
 
-		try {
-			const pkg = JSON.parse(pkgJsonContent);
+		// Assert state: if not null, must be a string.
+		assert(typeof pkgJsonContent === "string", "pkgJsonContent should be string if not null");
 
-			const hasBin = pkg && typeof pkg.bin !== "undefined";
+		try {
+			// Parse the JSON content.
+			const pkg = JSON.parse(pkgJsonContent);
+			// Assert state after parsing.
+			assert(typeof pkg === "object" && pkg !== null, "Parsed pkg invalid");
+
+			// Check for criteria: presence of 'bin' and SDK dependency.
+			// These checks use boolean coercion, which is acceptable here.
+			const hasBin = !!pkg.bin;
 			const hasSdkDep =
-				pkg &&
-				((pkg.dependencies && pkg.dependencies["@modelcontextprotocol/sdk"]) ||
-					(pkg.devDependencies && pkg.devDependencies["@modelcontextprotocol/sdk"]));
+				!!pkg.dependencies?.["@modelcontextprotocol/sdk"] ||
+				!!pkg.devDependencies?.["@modelcontextprotocol/sdk"];
 
 			if (hasBin && hasSdkDep) {
 				console.log(` --> Found potential server!`);
@@ -242,17 +331,44 @@ async function fetchFileContent(options: FetchFileContentOptions): Promise<strin
 				console.log(` -> Does not meet criteria (bin: ${hasBin}, sdk: ${hasSdkDep})`);
 			}
 		} catch (e) {
-			console.error(` -> Error parsing package.json for ${repo.owner}/${repo.name}:`, e);
+			// Handle JSON parsing error (operational error: invalid file).
+			console.error(
+				` -> Error parsing package.json for ` + `${repo.owner}/${repo.name}:`,
+				e instanceof Error ? e.message : String(e),
+			);
+			// Continue to the next repo despite parsing error.
 		}
 	}
 
-	console.log("\n--- Potential MCP Servers Found ---");
-	potentialServers.forEach((server) =>
-		console.log(`- ${server.owner}/${server.name} (${server.repoUrl})`),
-	);
-	console.log(
-		`------------------------------------\nChecked ${Math.min(repos.length, REPO_LIMIT)} repositories. Found ${potentialServers.length}.`,
-	);
+	// Assert final state before output.
+	assert(Array.isArray(potentialServers), "potentialServers should be array");
 
-	process.exit(0);
+	// --- Output Results ---
+	console.log("\n--- Potential MCP Servers Found ---");
+	potentialServers.forEach((server) => {
+		// Assert invariant during output loop.
+		assert(typeof server.owner === "string", "Server owner invalid");
+		assert(typeof server.name === "string", "Server name invalid");
+		assert(typeof server.repoUrl === "string", "Server URL invalid");
+		console.log(`- ${server.owner}/${server.name} (${server.repoUrl})`);
+	});
+
+	const checkedCount = Math.min(repos.length, REPO_LIMIT);
+	console.log(
+		`------------------------------------\nChecked ${checkedCount} ` +
+			`repositories. Found ${potentialServers.length}.`,
+	);
+}
+
+// --- Script Entry Point ---
+(async () => {
+	try {
+		await findPotentialServers();
+		process.exit(0); // Explicit success exit code.
+	} catch (error) {
+		// Catch unexpected errors (like assertion failures)
+		// at the top level.
+		console.error("Unhandled error during script execution:", error);
+		process.exit(1); // Explicit failure exit code.
+	}
 })();
