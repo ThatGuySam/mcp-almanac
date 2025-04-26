@@ -7,6 +7,7 @@ import { GitHubSearchResponseSchema, GitHubTreeResponseSchema } from "@lib/githu
 import type { GithubTreeItem } from "@lib/github-schema";
 import { getServerEntries } from "../src/lib/collections";
 import { z } from "zod";
+import { cachedFetch } from "@lib/utils";
 
 /**
  * Maximum number of repos to scan per topic.
@@ -48,7 +49,7 @@ async function fetchTopicRepos(options: { topic: string }): Promise<RepoInfo[]> 
 		Accept: "application/vnd.github.mercy-preview+json",
 	};
 
-	const response = await fetch(apiUrl, { headers });
+	const response = await cachedFetch(apiUrl, { headers });
 
 	// Assert intermediate state: response should be ok.
 	// This distinguishes programmer error (bad fetch setup)
@@ -78,15 +79,14 @@ async function fetchTopicRepos(options: { topic: string }): Promise<RepoInfo[]> 
 	// Map to our defined RepoInfo structure.
 	return data.items.map((item) => {
 		// Assert item structure during mapping.
-		assert(typeof item.id === "number", "Item id must be number");
-		assert(typeof item.name === "string", "Item name must be string");
-		assert(item.name.length > 0, "Item name must not be empty");
-		assert(typeof item.owner?.login === "string", "Item owner login must be string");
-		assert(item.owner.login.length > 0, "Item owner login must not be empty");
-		assert(typeof item.html_url === "string", "Item html_url must be string");
-		assert(item.html_url.length > 0, "Item html_url must not be empty");
-		assert(typeof item.default_branch === "string", "Item default_branch must be string");
-		assert(item.default_branch.length > 0, "Item default_branch must not be empty");
+		z.object({
+			id: z.number(),
+			name: z.string(),
+			description: z.string().nullable(),
+			owner: z.object({ login: z.string() }),
+			html_url: z.string(),
+			default_branch: z.string(),
+		}).parse(item);
 
 		return {
 			id: item.id,
@@ -133,7 +133,7 @@ async function fetchRepoStructure(
 	// if (token) { headers["Authorization"] = `Bearer ${token}`; }
 
 	try {
-		const response = await fetch(apiUrl, { method: "GET", headers });
+		const response = await cachedFetch(apiUrl, { method: "GET", headers });
 
 		// Assert intermediate state: response should exist.
 		assert(response, "Fetch API did not return a response");
@@ -220,7 +220,7 @@ async function fetchFileContent(options: FetchFileContentOptions): Promise<strin
 	// if (token) { headers["Authorization"] = `Bearer ${token}`; }
 
 	try {
-		const response = await fetch(apiUrl, { method: "GET", headers });
+		const response = await cachedFetch(apiUrl, { method: "GET", headers });
 
 		// Assert intermediate state: response should exist.
 		assert(response, "Fetch API did not return a response");
