@@ -212,11 +212,11 @@ export async function findPotentialServers(options: { repoLimit: number }): Prom
 	// const reposToCheck = repos.slice(0, options.repoLimit);
 	// No longer needed, limit applied in fetchTopicRepos
 
-	for (const repo of repos /* reposToCheck */) {
+	for (const repo of repos) {
 		// Assert loop invariant: repo object structure.
 		MiniItemSchema.parse(repo);
 
-		console.log(`Checking ${repo.owner}/${repo.name}...`);
+		console.log(`Checking ${repo.owner.login}/${repo.name}...`);
 
 		// Fetch package.json content.
 		const pkgJsonContent = await fetchFileContent({
