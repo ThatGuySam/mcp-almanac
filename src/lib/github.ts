@@ -27,7 +27,6 @@ function logRateLimitStatus(response: Response): void {
 
 	const limit = response.headers.get("x-ratelimit-limit");
 	const remaining = response.headers.get("x-ratelimit-remaining");
-	const used = response.headers.get("x-ratelimit-used");
 	const reset = response.headers.get("x-ratelimit-reset");
 
 	if (limit && remaining && reset) {
@@ -36,12 +35,14 @@ function logRateLimitStatus(response: Response): void {
 		console.info(
 			`RateLimit: ${remaining}/${limit} ` + `| Resets: ${resetTime.toLocaleTimeString()}`,
 		);
-	} else {
-		// Only warn if some headers are missing,
-		// as ungh.cc might not include them all
-		if (!limit || !remaining || !reset) {
-			console.warn("Some rate limit headers not found.");
-		}
+
+		return;
+	}
+
+	// Only warn if some headers are missing,
+	// as ungh.cc might not include them all
+	if (!limit || !remaining || !reset) {
+		console.warn("Some rate limit headers not found.");
 	}
 }
 
