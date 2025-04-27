@@ -4,6 +4,8 @@ import { assert } from "@sindresorhus/is";
 import { cachedFetch } from "./utils";
 import { z } from "zod";
 
+type CachedFetchResponse = Awaited<ReturnType<typeof cachedFetch>>;
+
 const GITHUB_BASENAME = "ungh.cc";
 
 const MiniItemSchema = ItemSchema.pick({
@@ -21,7 +23,7 @@ type MiniItem = z.infer<typeof MiniItemSchema>;
  * Logs the GitHub rate limit status from a Response-like object.
  * @param response - An object with a `headers` property that has a `get` method.
  */
-function logRateLimitStatus(response: Response): void {
+function logRateLimitStatus(response: Response | CachedFetchResponse): void {
 	// Assert that the response is a GitHub API response.
 	assert.truthy(response.headers.get("x-github-media-type"), "Invalid GitHub API response");
 
