@@ -85,7 +85,7 @@ export async function fetchTopicRepos(options: {
 		// Log rate limit status after fetch
 		logRateLimitStatus(response);
 
-		// Assert intermediate statex
+		// Assert intermediate state
 		assert.truthy(response.ok, `GitHub API fetch failed: ${response.status}`);
 
 		// Handle expected operational error
@@ -148,15 +148,17 @@ export async function fetchTopicRepos(options: {
  * We only need encoding and content.
  */
 const GithubContentResponseSchema = z.object({
-	encoding: z.literal("base64"),
-	content: z.string().min(1), // Content should not be empty
+	meta: z.object({
+		url: z.string().url(),
+	}),
+	file: z.object({
+		contents: z.string(),
+	}),
 });
 
 const FetchFileContentOptionsSchema = z.object({
-	owner: z.string(),
-	repo: z.string(),
 	path: z.string(),
-	ref: z.string().optional(),
+	repo: MiniItemSchema,
 });
 
 /**
@@ -171,14 +173,14 @@ type FetchFileContentOptions = z.infer<typeof FetchFileContentOptionsSchema>;
  *          or null if an operational error occurs (e.g., not found).
  */
 async function fetchFileContent(options: FetchFileContentOptions): Promise<string | null> {
-	const { owner, repo, path, ref } = options;
 	// Assert preconditions: owner, repo, path non-empty strings.
-	FetchFileContentOptionsSchema.parse(options);
+	const { repo, path } = FetchFileContentOptionsSchema.parse(options);
+	const { owner, default_branch } = repo;
+	const repoPath = `${owner.login}/${repo.name}`;
 
-	let apiUrl = `https://${GITHUB_BASENAME}/repos/${owner}/${repo}` + `/contents/${path}`;
-	if (ref) {
-		apiUrl += `?ref=${ref}`;
-	}
+	const apiUrl = `https://${GITHUB_BASENAME}/repos/${repoPath}/files/${default_branch}/${path}`;
+
+	console.log(`Fetching ${apiUrl}`);
 
 	const headers: HeadersInit = {
 		Accept: "application/vnd.github.v3+json",
@@ -202,28 +204,20 @@ async function fetchFileContent(options: FetchFileContentOptions): Promise<strin
 			const errorText = await response.text();
 			console.error(
 				`HTTP error fetching content for ${path} in ` +
-					`${owner}/${repo}: ${response.status}\nMessage: ${errorText}`,
+					`${repoPath}: ${response.status}\nMessage: ${errorText}`,
 			);
 			return null;
 		}
 
 		const rawData = await response.json();
-		const { data } = GithubContentResponseSchema.safeParse(rawData);
+		const { file } = GithubContentResponseSchema.parse(rawData);
 
-		// Assert intermediate state after validation.
-		assert.truthy(data?.encoding === "base64", "Encoding must be base64");
-		assert.nonEmptyString(data?.content, "Content must be a non-empty string");
+		console.log(`✅ Successfully fetched ${path} in ${repoPath}`);
 
-		// Decode the content.
-		const decodedContent = Buffer.from(data.content, "base64").toString("utf-8");
-
-		// Assert postcondition: decoded content is a string.
-		assert.string(decodedContent, "Decoded content invalid");
-
-		return decodedContent;
+		return file.contents;
 	} catch (error) {
 		// Catch fetch/network/Buffer errors - operational.
-		console.error(`Error fetching file content for ${path} in ${owner}/${repo}:`, error);
+		console.error(`❌ Error fetching file content for ${path} in ${owner}/${repo}:`, error);
 		return null; // Indicate failure gracefully.
 	}
 }
@@ -254,10 +248,8 @@ export async function findPotentialServers(options: { repoLimit: number }): Prom
 
 		// Fetch package.json content.
 		const pkgJsonContent = await fetchFileContent({
-			owner: repo.owner.login,
-			repo: repo.name,
 			path: "package.json",
-			ref: repo.default_branch,
+			repo,
 		});
 
 		// Handle expected case: package.json not found (operational).
