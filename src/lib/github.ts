@@ -16,56 +16,95 @@ const MiniItemSchema = ItemSchema.pick({
 type MiniItem = z.infer<typeof MiniItemSchema>;
 
 /**
- * Fetches repositories from GitHub based on a topic.
- * @param options - Contains the topic to search for.
- * @returns A promise resolving to an array of RepoInfo.
+ * Fetches repositories from GitHub based on a topic,
+ * handling pagination up to a specified limit.
+ * @param options - Contains the topic and repoLimit.
+ * @returns A promise resolving to an array of MiniItem.
  */
-export async function fetchTopicRepos(options: { topic: string }): Promise<MiniItem[]> {
-	const { topic } = options;
-	// Assert preconditions: topic must be a non-empty string.
+export async function fetchTopicRepos(options: {
+	topic: string;
+	repoLimit: number; // Added repoLimit
+}): Promise<MiniItem[]> {
+	const { topic, repoLimit } = options;
+	// Assert preconditions
 	assert.nonEmptyString(topic, "topic must not be empty");
+	assert.integer(repoLimit, "repoLimit must be an integer");
+	assert.truthy(repoLimit > 0, "repoLimit must be positive");
 
-	const apiUrl = `https://api.github.com/search/repositories?q=topic:${topic}`;
-	const headers: HeadersInit = {
-		Accept: "application/vnd.github.mercy-preview+json",
-	};
+	const allRepos: MiniItem[] = [];
+	let page = 1;
+	const perPage = 100; // Max allowed by GitHub API
 
-	const response = await cachedFetch(apiUrl, { headers });
+	while (allRepos.length < repoLimit) {
+		// Construct API URL with page and per_page params
+		const apiUrl =
+			`https://api.github.com/search/repositories` +
+			`?q=topic:${topic}` +
+			`&per_page=${perPage}` +
+			`&page=${page}`;
 
-	// Assert intermediate state: response should be ok.
-	// This distinguishes programmer error (bad fetch setup)
-	// from operational error (GitHub API issue).
-	assert.truthy(response.ok, `GitHub API fetch failed: ${response.status}`);
+		const headers: HeadersInit = {
+			Accept: "application/vnd.github.mercy-preview+json",
+		};
 
-	// Handle expected operational error.
-	if (!response.ok) {
-		// Log details for debugging potential API issues.
-		console.error(
-			`Failed to fetch topic repos for ${topic}: ` + `${response.status} ${response.statusText}`,
-		);
-		// Provide a clearer error message upwards.
-		throw new Error(`GitHub API error for topic ${topic}: ${response.status}`);
+		const response = await cachedFetch(apiUrl, { headers });
+
+		// Assert intermediate state
+		assert.truthy(response.ok, `GitHub API fetch failed: ${response.status}`);
+
+		// Handle expected operational error
+		if (!response.ok) {
+			console.error(
+				`Failed fetch for ${topic}, page ${page}: ` + `${response.status} ${response.statusText}`,
+			);
+			// Stop fetching if an error occurs on a page
+			break;
+		}
+
+		const rawData = await response.json();
+		const parseResult = GitHubSearchResponseSchema.safeParse(rawData);
+
+		if (!parseResult.success) {
+			console.error("Failed to parse GitHub API response:", parseResult.error);
+			break; // Stop if parsing fails
+		}
+		const { data } = parseResult;
+
+		// Ensure items is an array, even if empty
+		assert.truthy(data, "Parsed data should exist");
+		// Rely on loop validation + TS inference for data.items
+		// assert.array(data.items, "Expected items to be an array");
+
+		if (data.items.length === 0) {
+			break; // No more items found, exit loop
+		}
+
+		// Validate and add items to the results
+		for (const item of data.items) {
+			const validatedItem = MiniItemSchema.safeParse(item);
+			if (validatedItem.success) {
+				allRepos.push(validatedItem.data);
+				// Stop if we've reached the limit
+				if (allRepos.length >= repoLimit) {
+					break;
+				}
+			} else {
+				console.warn("Skipping invalid item from GitHub API:", validatedItem.error);
+			}
+		}
+
+		// Check again if limit reached after processing items
+		if (allRepos.length >= repoLimit) {
+			break;
+		}
+
+		page++; // Move to the next page
 	}
 
-	const rawData = await response.json();
-	const { data } = GitHubSearchResponseSchema.safeParse(rawData);
-
-	assert.nonEmptyArray(data?.items, "Expected items to be an array");
-
-	// Map to our defined RepoInfo structure.
-	return data.items.map((item) => {
-		// Assert item structure during mapping.
-		MiniItemSchema.parse(item);
-
-		return {
-			id: item.id,
-			name: item.name,
-			description: item.description, // Can be null
-			owner: item.owner,
-			html_url: item.html_url,
-			default_branch: item.default_branch,
-		} satisfies MiniItem;
-	});
+	// Return exactly the number of repos requested,
+	// or fewer if total found is less than the limit.
+	// The slice is implicit now as we stop adding once limit is hit.
+	return allRepos;
 }
 
 /**
@@ -157,17 +196,21 @@ async function fetchFileContent(options: FetchFileContentOptions): Promise<strin
  * Main execution logic for finding potential MCP servers.
  */
 export async function findPotentialServers(options: { repoLimit: number }): Promise<void> {
-	// Fetch initial list of repositories.
-	const repos = await fetchTopicRepos({ topic: "mcp" });
+	// Fetch initial list of repositories, up to repoLimit.
+	const repos = await fetchTopicRepos({
+		topic: "mcp",
+		repoLimit: options.repoLimit,
+	});
 	// Assert state after fetch.
 	assert.nonEmptyArray(repos, "fetchTopicRepos should return array");
 
 	const potentialServers: MiniItem[] = [];
 
 	// Limit iteration based on REPO_LIMIT.
-	const reposToCheck = repos.slice(0, options.repoLimit);
+	// const reposToCheck = repos.slice(0, options.repoLimit);
+	// No longer needed, limit applied in fetchTopicRepos
 
-	for (const repo of reposToCheck) {
+	for (const repo of repos /* reposToCheck */) {
 		// Assert loop invariant: repo object structure.
 		MiniItemSchema.parse(repo);
 
@@ -224,9 +267,11 @@ export async function findPotentialServers(options: { repoLimit: number }): Prom
 		console.log(`- ${server.owner}/${server.name} (${server.html_url})`);
 	});
 
-	const checkedCount = Math.min(repos.length, options.repoLimit);
+	// const checkedCount = Math.min(repos.length, options.repoLimit);
+	// Since repos.length is now <= options.repoLimit,
+	// checkedCount is simply repos.length.
 	console.log(
-		`------------------------------------\nChecked ${checkedCount} ` +
-			`repositories. Found ${potentialServers.length}.`,
+		`------------------------------------
+Checked ${repos.length} ` + `repositories. Found ${potentialServers.length}.`,
 	);
 }
