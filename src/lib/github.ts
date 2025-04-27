@@ -72,7 +72,7 @@ export async function fetchTopicRepos(options: {
 		// Construct API URL with page and per_page params
 		const apiUrl =
 			`https://api.github.com/search/repositories` +
-			`?q=topic:${topic}` +
+			`?q=topic:${topic}+language:typescript` +
 			`&per_page=${perPage}` +
 			`&page=${page}`;
 
@@ -85,7 +85,7 @@ export async function fetchTopicRepos(options: {
 		// Log rate limit status after fetch
 		logRateLimitStatus(response);
 
-		// Assert intermediate state
+		// Assert intermediate statex
 		assert.truthy(response.ok, `GitHub API fetch failed: ${response.status}`);
 
 		// Handle expected operational error
