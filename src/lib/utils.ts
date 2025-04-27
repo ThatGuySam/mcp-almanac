@@ -1,6 +1,7 @@
 import NodeFetchCache, { FileSystemCache } from "node-fetch-cache";
 
 export const cachedFetch = NodeFetchCache.create({
+	shouldCacheResponse: (response) => response.ok,
 	cache: new FileSystemCache({
 		// Specify where to keep the cache. If undefined, '.cache' is used by default.
 		// If this directory does not exist, it will be created.
