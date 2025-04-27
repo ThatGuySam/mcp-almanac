@@ -61,7 +61,7 @@ export const ItemSchema = z.object({
 	private: z.boolean(),
 	owner: OwnerSchema,
 	html_url: z.string(),
-	description: z.string(),
+	description: z.string().nullable(),
 	fork: z.boolean(),
 	url: z.string(),
 	forks_url: z.string(),
