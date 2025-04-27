@@ -1,23 +1,14 @@
-import { GitHubSearchResponseSchema, ItemSchema } from "./github-schema";
+import { GitHubSearchResponseSchema } from "./github-schema";
 
 import { assert } from "@sindresorhus/is";
 import { cachedFetch } from "./utils";
 import { z } from "zod";
+import type { MiniItem } from "./schema";
+import { MiniItemSchema } from "./schema";
 
 type CachedFetchResponse = Awaited<ReturnType<typeof cachedFetch>>;
 
 const GITHUB_BASENAME = "ungh.cc";
-
-const MiniItemSchema = ItemSchema.pick({
-	id: true,
-	name: true,
-	description: true,
-	owner: true,
-	html_url: true,
-	default_branch: true,
-});
-
-type MiniItem = z.infer<typeof MiniItemSchema>;
 
 /**
  * Logs the GitHub rate limit status from a Response-like object.
