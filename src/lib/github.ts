@@ -4,6 +4,8 @@ import { assert } from "@sindresorhus/is";
 import { cachedFetch } from "./utils";
 import { z } from "zod";
 
+const GITHUB_BASENAME = "ungh.cc";
+
 const MiniItemSchema = ItemSchema.pick({
 	id: true,
 	name: true,
@@ -139,7 +141,7 @@ async function fetchFileContent(options: FetchFileContentOptions): Promise<strin
 	// Assert preconditions: owner, repo, path non-empty strings.
 	FetchFileContentOptionsSchema.parse(options);
 
-	let apiUrl = `https://api.github.com/repos/${owner}/${repo}` + `/contents/${path}`;
+	let apiUrl = `https://${GITHUB_BASENAME}/repos/${owner}/${repo}` + `/contents/${path}`;
 	if (ref) {
 		apiUrl += `?ref=${ref}`;
 	}
