@@ -18,6 +18,34 @@ const MiniItemSchema = ItemSchema.pick({
 type MiniItem = z.infer<typeof MiniItemSchema>;
 
 /**
+ * Logs the GitHub rate limit status from a Response-like object.
+ * @param response - An object with a `headers` property that has a `get` method.
+ */
+function logRateLimitStatus(response: Response): void {
+	// Assert that the response is a GitHub API response.
+	assert.truthy(response.headers.get("x-github-media-type"), "Invalid GitHub API response");
+
+	const limit = response.headers.get("x-ratelimit-limit");
+	const remaining = response.headers.get("x-ratelimit-remaining");
+	const used = response.headers.get("x-ratelimit-used");
+	const reset = response.headers.get("x-ratelimit-reset");
+
+	if (limit && remaining && reset) {
+		const resetTime = new Date(parseInt(reset, 10) * 1000);
+		// Log remaining/limit and reset time for brevity
+		console.info(
+			`RateLimit: ${remaining}/${limit} ` + `| Resets: ${resetTime.toLocaleTimeString()}`,
+		);
+	} else {
+		// Only warn if some headers are missing,
+		// as ungh.cc might not include them all
+		if (!limit || !remaining || !reset) {
+			console.warn("Some rate limit headers not found.");
+		}
+	}
+}
+
+/**
  * Fetches repositories from GitHub based on a topic,
  * handling pagination up to a specified limit.
  * @param options - Contains the topic and repoLimit.
@@ -50,6 +78,9 @@ export async function fetchTopicRepos(options: {
 		};
 
 		const response = await cachedFetch(apiUrl, { headers });
+
+		// Log rate limit status after fetch
+		logRateLimitStatus(response);
 
 		// Assert intermediate state
 		assert.truthy(response.ok, `GitHub API fetch failed: ${response.status}`);
@@ -200,7 +231,7 @@ async function fetchFileContent(options: FetchFileContentOptions): Promise<strin
 export async function findPotentialServers(options: { repoLimit: number }): Promise<void> {
 	// Fetch initial list of repositories, up to repoLimit.
 	const repos = await fetchTopicRepos({
-		topic: "mcp",
+		topic: "mcp-server",
 		repoLimit: options.repoLimit,
 	});
 	// Assert state after fetch.
@@ -216,7 +247,7 @@ export async function findPotentialServers(options: { repoLimit: number }): Prom
 		// Assert loop invariant: repo object structure.
 		MiniItemSchema.parse(repo);
 
-		console.log(`Checking ${repo.owner.login}/${repo.name}...`);
+		console.log(`Checking ${repo.html_url}...`);
 
 		// Fetch package.json content.
 		const pkgJsonContent = await fetchFileContent({
