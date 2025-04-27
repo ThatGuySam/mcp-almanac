@@ -292,7 +292,7 @@ export async function findPotentialServers(options: { repoLimit: number }): Prom
 	// --- Output Results ---
 	console.log("\n--- Potential MCP Servers Found ---");
 	potentialServers.forEach((server) => {
-		console.log(`- ${server.owner}/${server.name} (${server.html_url})`);
+		console.log(`- ${server.owner.login}/${server.name} (${server.html_url})`);
 	});
 
 	// const checkedCount = Math.min(repos.length, options.repoLimit);
