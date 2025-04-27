@@ -13,7 +13,9 @@ import { findPotentialServers } from "@lib/github";
  * Maximum number of repos to scan per topic.
  * Enforces a boundary on external API calls.
  */
-const REPO_LIMIT = 100;
+const REPO_LIMIT = 200;
+
+const GITHUB_BASENAME = "ungh.cc";
 
 // Ensure servers are loaded before proceeding.
 // This acts as an early check for required data.
@@ -47,7 +49,7 @@ async function fetchRepoStructure(
 	assert(typeof branch === "string" && branch.length > 0, "branch invalid");
 
 	const apiUrl =
-		`https://api.github.com/repos/${owner}/${repo}` + `/git/trees/${branch}?recursive=1`;
+		`https://${GITHUB_BASENAME}/repos/${owner}/${repo}` + `/git/trees/${branch}?recursive=1`;
 	const headers: HeadersInit = {
 		Accept: "application/vnd.github.v3+json",
 	};
