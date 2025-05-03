@@ -159,7 +159,7 @@ async function fetchFileContent(options: FetchFileContentOptions) {
 
 	const apiUrl = `https://${GITHUB_BASENAME}/repos/${repoPath}/files/${default_branch}/${path}`;
 
-	console.log(`Fetching ${apiUrl}`);
+	console.log(`🔍 Fetching ${apiUrl}`);
 
 	const headers: HeadersInit = {
 		Accept: "application/vnd.github.v3+json",
@@ -203,9 +203,44 @@ async function fetchFileContent(options: FetchFileContentOptions) {
 }
 
 /**
+ * Reads the non-servers CSV file and returns a Set of repo paths
+ * @returns Promise<Set<string>> of repo paths (owner/name)
+ */
+async function getNonServerPaths(): Promise<Set<string>> {
+	const { readFile } = await import("node:fs/promises");
+	const { existsSync } = await import("node:fs");
+	const { join } = await import("node:path");
+
+	const csvPath = join(process.cwd(), "data", "non-servers.csv");
+	const nonServerPaths = new Set<string>();
+
+	if (!existsSync(csvPath)) {
+		return nonServerPaths;
+	}
+
+	try {
+		const content = await readFile(csvPath, "utf-8");
+		// Skip header, process each line
+		const lines = content.split("\n").slice(1);
+		for (const line of lines) {
+			if (!line.trim()) continue;
+			const [repoPath] = line.split(",");
+			nonServerPaths.add(repoPath);
+		}
+	} catch (error) {
+		console.warn("Failed to read non-servers:", error);
+	}
+
+	return nonServerPaths;
+}
+
+/**
  * Main execution logic for finding potential MCP servers.
  */
 export async function findPotentialServers(options: { repoLimit: number }): Promise<MiniItem[]> {
+	// Load known non-servers first
+	const nonServerPaths = await getNonServerPaths();
+
 	// Fetch initial list of repositories, up to repoLimit.
 	const repos = await fetchTopicRepos({
 		topic: "mcp-server",
@@ -224,7 +259,14 @@ export async function findPotentialServers(options: { repoLimit: number }): Prom
 		// Assert loop invariant: repo object structure.
 		MiniItemSchema.parse(repo);
 
-		console.log(`Checking ${repo.html_url}...`);
+		// Skip if already known as non-server
+		const repoPath = `${repo.owner.login}/${repo.name}`;
+		if (nonServerPaths.has(repoPath)) {
+			console.log(`⏭️ Skipping ${repo.html_url} (known non-server)`);
+			continue;
+		}
+
+		console.log(`🔍 Checking ${repo.html_url}...`);
 
 		// Fetch package.json content.
 		const pkgJsonContent = await fetchFileContent({
