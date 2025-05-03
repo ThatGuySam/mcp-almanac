@@ -241,6 +241,9 @@ export async function findPotentialServers(options: { repoLimit: number }): Prom
 		const pkgJsonContent = await fetchFileContent({
 			path: "package.json",
 			repo,
+		}).catch((error) => {
+			console.error(`❌ Error fetching package.json for ${repo.html_url}:`, error);
+			throw error;
 		});
 
 		// Handle expected case: package.json not found (operational).
