@@ -19,7 +19,7 @@ export const ServerSchema = z.object({
 	repoUrl: z.string().url(),
 	verifications: z.array(z.enum(verificationTags)),
 	lastUpdated: z.string(),
-	ogImage: z.string().startsWith("/"),
+	ogImage: z.union([z.string().startsWith("/"), z.literal("")]),
 });
 
 export type Server = z.infer<typeof ServerSchema>;
