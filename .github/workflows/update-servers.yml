@@ -34,9 +34,6 @@ jobs:
       
       - name: Run update script
         run: pnpm tsx scripts/update.ts
-        env:
-          # If needed, add GitHub token for API access
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Optional: Commit changes if any files were updated
       - name: Commit changes
