@@ -44,7 +44,7 @@ function getSlugsFromRepoUrl(rawRepoUrl: string): { name: string; owner: string 
 
 function makeServerFileName(server: Server): `${string}---${string}.md` {
 	const { name, owner } = getSlugsFromRepoUrl(server.repoUrl);
-	return `${name}---${owner}.md`;
+	return `${slugify(name)}---${slugify(owner)}.md`;
 }
 
 export async function writeServerEntries(repos: MiniItem[]) {
