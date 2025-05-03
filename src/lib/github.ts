@@ -216,7 +216,7 @@ async function fetchFileContent(options: FetchFileContentOptions): Promise<strin
 /**
  * Main execution logic for finding potential MCP servers.
  */
-export async function findPotentialServers(options: { repoLimit: number }): Promise<void> {
+export async function findPotentialServers(options: { repoLimit: number }): Promise<MiniItem[]> {
 	// Fetch initial list of repositories, up to repoLimit.
 	const repos = await fetchTopicRepos({
 		topic: "mcp-server",
@@ -293,4 +293,6 @@ export async function findPotentialServers(options: { repoLimit: number }): Prom
 		`------------------------------------
 Checked ${repos.length} ` + `repositories. Found ${potentialServers.length}.`,
 	);
+
+	return potentialServers;
 }
