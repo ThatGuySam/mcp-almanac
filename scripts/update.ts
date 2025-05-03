@@ -5,7 +5,7 @@
 import assert from "node:assert/strict";
 import { GitHubTreeResponseSchema } from "@lib/github-schema";
 import type { GithubTreeItem } from "@lib/github-schema";
-import { getServerEntries } from "../src/lib/collections";
+import { getServerEntries, writeServerEntries } from "../src/lib/collections";
 import { cachedFetch } from "@lib/utils";
 import { findPotentialServers } from "@lib/github";
 
@@ -13,7 +13,7 @@ import { findPotentialServers } from "@lib/github";
  * Maximum number of repos to scan per topic.
  * Enforces a boundary on external API calls.
  */
-const REPO_LIMIT = 200;
+const REPO_LIMIT = 20;
 
 const GITHUB_BASENAME = "ungh.cc";
 
@@ -43,7 +43,7 @@ async function fetchRepoStructure(
 	options: FetchRepoStructureOptions,
 ): Promise<GithubTreeItem[] | null> {
 	const { owner, repo, branch } = options;
-	// Assert preconditions: owner, repo, branch are non-empty strings.
+	// Assert Potential MCP Servers Found: owner, repo, branch are non-empty strings.
 	assert(typeof owner === "string" && owner.length > 0, "owner invalid");
 	assert(typeof repo === "string" && repo.length > 0, "repo invalid");
 	assert(typeof branch === "string" && branch.length > 0, "branch invalid");
@@ -98,7 +98,8 @@ async function fetchRepoStructure(
 // --- Script Entry Point ---
 (async () => {
 	try {
-		await findPotentialServers({ repoLimit: REPO_LIMIT });
+		const repos = await findPotentialServers({ repoLimit: REPO_LIMIT });
+		await writeServerEntries(repos);
 		process.exit(0); // Explicit success exit code.
 	} catch (error) {
 		// Catch unexpected errors (like assertion failures)
