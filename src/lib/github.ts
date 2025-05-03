@@ -167,6 +167,7 @@ async function fetchFileContent(options: FetchFileContentOptions): Promise<strin
 	// Assert preconditions: owner, repo, path non-empty strings.
 	const { repo, path } = FetchFileContentOptionsSchema.parse(options);
 	const { owner, default_branch } = repo;
+	assert.nonEmptyString(owner.login, "owner.login must not be empty");
 	const repoPath = `${owner.login}/${repo.name}`;
 
 	const apiUrl = `https://${GITHUB_BASENAME}/repos/${repoPath}/files/${default_branch}/${path}`;
@@ -201,15 +202,16 @@ async function fetchFileContent(options: FetchFileContentOptions): Promise<strin
 		}
 
 		const rawData = await response.json();
-		const { file } = GithubContentResponseSchema.parse(rawData);
+
+		assert.nonEmptyObject(rawData, "rawData should not be empty");
 
 		console.log(`✅ Successfully fetched ${path} in ${repoPath}`);
 
-		return file.contents;
+		return rawData;
 	} catch (error) {
 		// Catch fetch/network/Buffer errors - operational.
 		console.error(`❌ Error fetching file content for ${path} in ${owner}/${repo}:`, error);
-		return null; // Indicate failure gracefully.
+		throw error;
 	}
 }
 
