@@ -13,7 +13,7 @@ import { findPotentialServers } from "@lib/github";
  * Maximum number of repos to scan per topic.
  * Enforces a boundary on external API calls.
  */
-const REPO_LIMIT = 20;
+const REPO_LIMIT = 30;
 
 const GITHUB_BASENAME = "ungh.cc";
 
