@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ItemSchema } from "./github-schema";
+import { ItemSchema, OwnerSchema } from "./github-schema";
 
 const verificationTags = [
 	"passes-mcp-shield",
@@ -31,6 +31,10 @@ export const MiniItemSchema = ItemSchema.pick({
 	owner: true,
 	html_url: true,
 	default_branch: true,
+}).extend({
+	owner: OwnerSchema.extend({
+		login: z.string().min(1),
+	}),
 });
 
 export type MiniItem = z.infer<typeof MiniItemSchema>;
