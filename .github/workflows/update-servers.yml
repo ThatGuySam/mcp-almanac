@@ -15,6 +15,10 @@ jobs:
   update:
     runs-on: ubuntu-latest
     
+    # Add permissions block for GITHUB_TOKEN
+    permissions:
+      contents: write
+    
     steps:
       - uses: actions/checkout@v4
       
