@@ -1,6 +1,6 @@
 import { GitHubSearchResponseSchema } from "./github-schema";
-
 import { assert } from "@sindresorhus/is";
+
 import { cachedFetch } from "./utils";
 import { z } from "zod";
 import type { MiniItem } from "./schema";
@@ -134,19 +134,6 @@ export async function fetchTopicRepos(options: {
 	return allRepos;
 }
 
-/**
- * Schema for expected GitHub content API response.
- * We only need encoding and content.
- */
-const GithubContentResponseSchema = z.object({
-	meta: z.object({
-		url: z.string().url(),
-	}),
-	file: z.object({
-		contents: z.string(),
-	}),
-});
-
 const FetchFileContentOptionsSchema = z.object({
 	path: z.string(),
 	repo: MiniItemSchema,
@@ -163,7 +150,7 @@ type FetchFileContentOptions = z.infer<typeof FetchFileContentOptionsSchema>;
  * @returns A promise resolving to decoded file content string
  *          or null if an operational error occurs (e.g., not found).
  */
-async function fetchFileContent(options: FetchFileContentOptions): Promise<string | null> {
+async function fetchFileContent(options: FetchFileContentOptions) {
 	// Assert preconditions: owner, repo, path non-empty strings.
 	const { repo, path } = FetchFileContentOptionsSchema.parse(options);
 	const { owner, default_branch } = repo;
@@ -254,11 +241,6 @@ export async function findPotentialServers(options: { repoLimit: number }): Prom
 			continue; // Move to the next repository.
 		}
 
-		// Assert state: if not null, must be a string.
-		assert.string(pkgJsonContent, "pkgJsonContent should be string if not null");
-
-		const rawJson = JSON.parse(pkgJsonContent);
-
 		// Parse the JSON content.
 		const pkg = z
 			.object({
@@ -266,7 +248,7 @@ export async function findPotentialServers(options: { repoLimit: number }): Prom
 				dependencies: z.record(z.string(), z.string()).optional(),
 				devDependencies: z.record(z.string(), z.string()).optional(),
 			})
-			.parse(rawJson);
+			.parse(pkgJsonContent);
 		// Check for criteria: presence of 'bin' and SDK dependency.
 		// These checks use boolean coercion, which is acceptable here.
 		const hasBin = !!pkg.bin;
