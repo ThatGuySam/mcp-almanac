@@ -261,6 +261,7 @@ export async function findPotentialServers(options: { repoLimit: number }): Prom
 			potentialServers.push(repo);
 		} else {
 			console.log(` -> Does not meet criteria (bin: ${hasBin}, sdk: ${hasSdkDep})`);
+			await storeNonServer(repo);
 		}
 	}
 
@@ -282,4 +283,41 @@ Checked ${repos.length} ` + `repositories. Found ${potentialServers.length}.`,
 	);
 
 	return potentialServers;
+}
+
+/**
+ * Stores non-server repositories in a CSV file.
+ * @param repo - Repository that doesn't meet server criteria
+ * @returns Promise that resolves when write is complete
+ */
+export async function storeNonServer(repo: MiniItem): Promise<void> {
+	const { writeFile } = await import("node:fs/promises");
+	const { existsSync } = await import("node:fs");
+	const { join } = await import("node:path");
+
+	// Create CSV line from NonServerSchema fields
+	const repoPath = `${repo.owner.login}/${repo.name}`;
+	const lastChecked = new Date().toISOString();
+	const csvLine = `${repoPath},${lastChecked}\n`;
+
+	const csvPath = join(process.cwd(), "data", "non-servers.csv");
+
+	try {
+		// Ensure data directory exists
+		const dataDir = join(process.cwd(), "data");
+		if (!existsSync(dataDir)) {
+			const { mkdir } = await import("node:fs/promises");
+			await mkdir(dataDir, { recursive: true });
+		}
+
+		// Create header if file doesn't exist
+		if (!existsSync(csvPath)) {
+			await writeFile(csvPath, "repoPath,lastChecked\n");
+		}
+		// Append new entry
+		await writeFile(csvPath, csvLine, { flag: "a" });
+	} catch (error) {
+		console.error("Failed to write non-server:", error);
+		throw error;
+	}
 }
