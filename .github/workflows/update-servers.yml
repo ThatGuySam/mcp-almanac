@@ -43,4 +43,4 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore: update server list"
-          file_pattern: "src/content/servers/*.md" 
+          file_pattern: "src/content/servers/*.md data/**/*"
