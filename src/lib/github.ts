@@ -1,8 +1,11 @@
 import { GitHubSearchResponseSchema } from "./github-schema";
 import { assert } from "@sindresorhus/is";
+import { z } from "zod";
+import { existsSync } from "node:fs";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 
 import { cachedFetch } from "./utils";
-import { z } from "zod";
 import type { MiniItem } from "./schema";
 import { MiniItemSchema } from "./schema";
 
@@ -207,10 +210,6 @@ async function fetchFileContent(options: FetchFileContentOptions) {
  * @returns Promise<Set<string>> of repo paths (owner/name)
  */
 async function getNonServerPaths(): Promise<Set<string>> {
-	const { readFile } = await import("node:fs/promises");
-	const { existsSync } = await import("node:fs");
-	const { join } = await import("node:path");
-
 	const csvPath = join(process.cwd(), "data", "non-servers.csv");
 	const nonServerPaths = new Set<string>();
 
