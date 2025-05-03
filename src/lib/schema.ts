@@ -38,3 +38,18 @@ export const MiniItemSchema = ItemSchema.pick({
 });
 
 export type MiniItem = z.infer<typeof MiniItemSchema>;
+
+export const NonServerSchema = z.object({
+	repoPath: z.string().refine(
+		(path) => {
+			const [owner, name] = path.split("/");
+			return owner && name;
+		},
+		{
+			message: "repoPath must be in the format owner/name",
+		},
+	),
+	lastChecked: z.string().datetime(),
+});
+
+export type NonServer = z.infer<typeof NonServerSchema>;
