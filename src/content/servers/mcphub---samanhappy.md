@@ -5,7 +5,7 @@ description: >-
   Streamable HTTP (SSE) endpoints for different scenarios
 repoUrl: 'https://github.com/samanhappy/mcphub'
 verifications: []
-lastUpdated: '2025-05-03T21:31:33.374Z'
+lastUpdated: '2025-05-04T00:22:01.788Z'
 ogImage: ''
 ---
 
