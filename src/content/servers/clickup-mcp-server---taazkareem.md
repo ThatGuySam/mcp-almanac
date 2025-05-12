@@ -5,7 +5,7 @@ description: >-
   Context Protocol
 repoUrl: 'https://github.com/taazkareem/clickup-mcp-server'
 verifications: []
-lastUpdated: '2025-05-11T00:21:37.749Z'
+lastUpdated: '2025-05-12T00:21:01.454Z'
 ogImage: ''
 ---
 
