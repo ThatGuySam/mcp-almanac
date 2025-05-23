@@ -3,7 +3,7 @@ title: mcp-server-chart
 description: "\U0001F916 A Model Context Protocol server for generating visual charts using @antvis."
 repoUrl: 'https://github.com/antvis/mcp-server-chart'
 verifications: []
-lastUpdated: '2025-05-22T00:19:55.946Z'
+lastUpdated: '2025-05-23T00:20:05.363Z'
 ogImage: ''
 ---
 

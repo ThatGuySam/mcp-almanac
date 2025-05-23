@@ -7,7 +7,7 @@ description: >-
   refinement, enabling agent-like developer behavior in reasoning AI systems.
 repoUrl: 'https://github.com/cjo4m06/mcp-shrimp-task-manager'
 verifications: []
-lastUpdated: '2025-05-22T00:19:55.946Z'
+lastUpdated: '2025-05-23T00:20:05.363Z'
 ogImage: ''
 ---
 
