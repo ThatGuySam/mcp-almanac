@@ -5,7 +5,7 @@ description: >-
   management, inspired by Cline Memory Bank.
 repoUrl: 'https://github.com/alioshr/memory-bank-mcp'
 verifications: []
-lastUpdated: '2025-05-24T00:19:45.121Z'
+lastUpdated: '2025-05-25T00:22:37.944Z'
 ogImage: ''
 ---
 
