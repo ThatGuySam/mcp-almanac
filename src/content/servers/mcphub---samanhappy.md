@@ -1,11 +1,11 @@
 ---
 title: mcphub
 description: >-
-  A unified hub server that aggregates multiple MCP servers into separate
-  Streamable HTTP (SSE) endpoints for different scenarios
+  A unified hub server that organizes multiple MCP servers into distinct
+  streamable HTTP (SSE) endpoints
 repoUrl: 'https://github.com/samanhappy/mcphub'
 verifications: []
-lastUpdated: '2025-05-25T00:22:37.944Z'
+lastUpdated: '2025-05-26T00:20:59.954Z'
 ogImage: ''
 ---
 
