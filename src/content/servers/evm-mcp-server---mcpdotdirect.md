@@ -3,7 +3,7 @@ title: evm-mcp-server
 description: MCP server that provides LLM with tools for interacting with EVM networks
 repoUrl: 'https://github.com/mcpdotdirect/evm-mcp-server'
 verifications: []
-lastUpdated: '2025-06-12T00:20:25.123Z'
+lastUpdated: '2025-06-13T00:20:45.250Z'
 ogImage: ''
 ---
 
