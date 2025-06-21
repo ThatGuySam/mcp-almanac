@@ -3,7 +3,7 @@ title: mcp-server-azure-devops
 description: An MCP server for Azure DevOps
 repoUrl: 'https://github.com/Tiberriver256/mcp-server-azure-devops'
 verifications: []
-lastUpdated: '2025-06-20T00:20:26.214Z'
+lastUpdated: '2025-06-21T00:20:35.297Z'
 ogImage: ''
 ---
 
