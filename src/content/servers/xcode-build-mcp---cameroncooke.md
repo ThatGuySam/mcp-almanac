@@ -5,7 +5,7 @@ description: >-
   integration with AI assistants and other MCP clients.
 repoUrl: 'https://github.com/cameroncooke/XcodeBuildMCP'
 verifications: []
-lastUpdated: '2025-06-22T00:23:08.125Z'
+lastUpdated: '2025-06-23T00:22:18.958Z'
 ogImage: ''
 ---
 
