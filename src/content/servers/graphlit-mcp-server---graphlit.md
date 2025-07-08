@@ -3,7 +3,7 @@ title: graphlit-mcp-server
 description: Model Context Protocol (MCP) Server for Graphlit Platform
 repoUrl: 'https://github.com/graphlit/graphlit-mcp-server'
 verifications: []
-lastUpdated: '2025-07-07T00:22:41.612Z'
+lastUpdated: '2025-07-08T00:20:50.712Z'
 ogImage: ''
 ---
 
