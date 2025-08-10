@@ -5,7 +5,7 @@ description: >-
   and private documentation.
 repoUrl: 'https://github.com/ref-tools/ref-tools-mcp'
 verifications: []
-lastUpdated: '2025-08-09T00:20:24.776Z'
+lastUpdated: '2025-08-10T00:24:05.785Z'
 ogImage: ''
 ---
 
