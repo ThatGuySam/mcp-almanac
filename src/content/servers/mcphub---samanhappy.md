@@ -6,7 +6,7 @@ description: >-
   routing strategies
 repoUrl: 'https://github.com/samanhappy/mcphub'
 verifications: []
-lastUpdated: '2025-08-13T00:20:58.067Z'
+lastUpdated: '2025-08-14T00:21:02.663Z'
 ogImage: ''
 ---
 
