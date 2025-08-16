@@ -3,7 +3,7 @@ title: mcp-server-chatsum
 description: Query and Summarize your chat messages.
 repoUrl: 'https://github.com/chatmcp/mcp-server-chatsum'
 verifications: []
-lastUpdated: '2025-08-15T00:21:48.015Z'
+lastUpdated: '2025-08-16T00:20:09.367Z'
 ogImage: ''
 ---
 
