@@ -5,7 +5,7 @@ description: >-
   the LINE Official Account.
 repoUrl: 'https://github.com/line/line-bot-mcp-server'
 verifications: []
-lastUpdated: '2025-08-25T00:20:48.112Z'
+lastUpdated: '2025-08-26T00:19:49.417Z'
 ogImage: ''
 ---
 
