@@ -5,7 +5,7 @@ description: >-
   Atlas Clusters.
 repoUrl: 'https://github.com/mongodb-js/mongodb-mcp-server'
 verifications: []
-lastUpdated: '2025-09-10T00:19:06.920Z'
+lastUpdated: '2025-09-11T00:19:30.248Z'
 ogImage: ''
 ---
 
