@@ -5,7 +5,7 @@ description: >-
   session - useful for REPL and CLI assistance
 repoUrl: 'https://github.com/ferrislucas/iterm-mcp'
 verifications: []
-lastUpdated: '2025-09-29T00:20:21.885Z'
+lastUpdated: '2025-09-30T00:19:30.095Z'
 ogImage: ''
 ---
 
