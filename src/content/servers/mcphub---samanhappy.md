@@ -2,11 +2,11 @@
 title: mcphub
 description: >-
   A unified hub for centralized management and dynamic organization of multiple
-  MCP servers into streamable HTTP (SSE) endpoints, with support for flexible
-  routing strategies
+  MCP servers/APIs into streamable HTTP (SSE) endpoints, with support for
+  flexible routing strategies
 repoUrl: 'https://github.com/samanhappy/mcphub'
 verifications: []
-lastUpdated: '2025-09-30T00:19:30.095Z'
+lastUpdated: '2025-10-01T00:22:16.738Z'
 ogImage: ''
 ---
 
