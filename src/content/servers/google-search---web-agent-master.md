@@ -6,7 +6,7 @@ description: >-
   server integration.
 repoUrl: 'https://github.com/web-agent-master/google-search'
 verifications: []
-lastUpdated: '2025-10-04T00:18:18.432Z'
+lastUpdated: '2025-10-05T00:21:21.257Z'
 ogImage: ''
 ---
 

@@ -6,7 +6,7 @@ description: >-
   flexible routing strategies
 repoUrl: 'https://github.com/samanhappy/mcphub'
 verifications: []
-lastUpdated: '2025-10-04T00:18:18.432Z'
+lastUpdated: '2025-10-05T00:21:21.257Z'
 ogImage: ''
 ---
 
