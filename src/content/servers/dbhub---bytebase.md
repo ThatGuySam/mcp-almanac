@@ -5,7 +5,7 @@ description: >-
   MariaDB.
 repoUrl: 'https://github.com/bytebase/dbhub'
 verifications: []
-lastUpdated: '2025-10-15T00:19:39.734Z'
+lastUpdated: '2025-10-16T00:20:08.614Z'
 ogImage: ''
 ---
 
