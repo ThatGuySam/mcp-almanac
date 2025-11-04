@@ -5,7 +5,7 @@ description: >-
   workflows for you 
 repoUrl: 'https://github.com/czlonkowski/n8n-mcp'
 verifications: []
-lastUpdated: '2025-11-03T00:21:41.260Z'
+lastUpdated: '2025-11-04T00:20:16.227Z'
 ogImage: ''
 ---
 
