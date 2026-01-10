@@ -5,7 +5,7 @@ description: >-
   libraries without wasting the context window.
 repoUrl: 'https://github.com/ref-tools/ref-tools-mcp'
 verifications: []
-lastUpdated: '2026-01-09T00:22:27.214Z'
+lastUpdated: '2026-01-10T00:22:00.497Z'
 ogImage: ''
 ---
 

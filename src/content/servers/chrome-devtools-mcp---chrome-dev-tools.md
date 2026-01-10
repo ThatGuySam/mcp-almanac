@@ -3,7 +3,7 @@ title: chrome-devtools-mcp
 description: Chrome DevTools for coding agents
 repoUrl: 'https://github.com/ChromeDevTools/chrome-devtools-mcp'
 verifications: []
-lastUpdated: '2026-01-09T00:22:27.214Z'
+lastUpdated: '2026-01-10T00:22:00.497Z'
 ogImage: ''
 ---
 
