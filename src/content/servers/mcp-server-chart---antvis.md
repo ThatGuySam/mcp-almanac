@@ -1,9 +1,9 @@
 ---
 title: mcp-server-chart
-description: "\U0001F916 A visualization mcp contains 25+ visual charts using @antvis. Using for chart generation and data analysis."
+description: "\U0001F916 A visualization mcp & skills contains 25+ visual charts using @antvis. Using for chart generation and data analysis."
 repoUrl: 'https://github.com/antvis/mcp-server-chart'
 verifications: []
-lastUpdated: '2026-01-15T00:21:15.341Z'
+lastUpdated: '2026-01-16T00:22:57.300Z'
 ogImage: ''
 ---
 
