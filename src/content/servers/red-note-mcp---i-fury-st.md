@@ -3,7 +3,7 @@ title: RedNote-MCP
 description: "\U0001F680MCP server for accessing RedNote(XiaoHongShu, xhs)."
 repoUrl: 'https://github.com/iFurySt/RedNote-MCP'
 verifications: []
-lastUpdated: '2026-01-23T00:23:08.922Z'
+lastUpdated: '2026-01-24T00:22:00.674Z'
 ogImage: ''
 ---
 
