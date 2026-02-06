@@ -5,7 +5,7 @@ description: >-
   applications to control your browser
 repoUrl: 'https://github.com/BrowserMCP/mcp'
 verifications: []
-lastUpdated: '2026-02-05T00:28:12.253Z'
+lastUpdated: '2026-02-06T00:25:49.752Z'
 ogImage: ''
 ---
 
