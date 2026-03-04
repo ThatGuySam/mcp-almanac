@@ -2,12 +2,12 @@
 title: contextplus
 description: >-
   Semantic Intelligence for Large-Scale Engineering. Context+ is an MCP server
-  designed for developers who demand 99% accuracy. By combining Tree-sitter AST
-  parsing, Spectral Clustering, and Obsidian-style linking, Context+ turns a
-  massive codebase into a searchable, hierarchical feature graph.
+  designed for developers who demand 99% accuracy. By combining RAG, Tree-sitter
+  AST, Spectral Clustering, and Obsidian-style linking, Context+ turns a massive
+  codebase into a searchable, hierarchical feature graph.
 repoUrl: 'https://github.com/ForLoopCodes/contextplus'
 verifications: []
-lastUpdated: '2026-03-03T00:28:15.645Z'
+lastUpdated: '2026-03-04T00:27:04.211Z'
 ogImage: ''
 ---
 
