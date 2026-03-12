@@ -5,7 +5,7 @@ description: >-
   MCP servers/APIs into separate endpoints with flexible routing strategies
 repoUrl: 'https://github.com/samanhappy/mcphub'
 verifications: []
-lastUpdated: '2026-03-11T00:25:05.566Z'
+lastUpdated: '2026-03-12T00:23:23.124Z'
 ogImage: ''
 ---
 
