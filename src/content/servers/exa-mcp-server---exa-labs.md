@@ -3,7 +3,7 @@ title: exa-mcp-server
 description: Exa MCP for web search and web crawling!
 repoUrl: 'https://github.com/exa-labs/exa-mcp-server'
 verifications: []
-lastUpdated: '2026-03-28T00:28:45.769Z'
+lastUpdated: '2026-03-29T00:32:57.475Z'
 ogImage: ''
 ---
 
