@@ -5,7 +5,7 @@ description: >-
   검증 | 41 Korean legal APIs → 16 MCP tools with AI citation hallucination guard
 repoUrl: 'https://github.com/chrisryugj/korean-law-mcp'
 verifications: []
-lastUpdated: '2026-04-21T00:37:14.115Z'
+lastUpdated: '2026-04-22T00:33:48.580Z'
 ogImage: ''
 ---
 
