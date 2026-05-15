@@ -5,7 +5,7 @@ description: >-
   reduction. 15 platforms
 repoUrl: 'https://github.com/mksglu/context-mode'
 verifications: []
-lastUpdated: '2026-05-14T00:47:02.360Z'
+lastUpdated: '2026-05-15T00:44:31.092Z'
 ogImage: ''
 ---
 
