@@ -7,7 +7,7 @@ description: >-
   codebase into a searchable, hierarchical feature graph.
 repoUrl: 'https://github.com/forloopcodes/contextplus'
 verifications: []
-lastUpdated: '2026-05-24T00:48:41.054Z'
+lastUpdated: '2026-05-25T00:49:36.149Z'
 ogImage: ''
 ---
 
