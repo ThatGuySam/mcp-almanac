@@ -6,7 +6,7 @@ description: >-
   안내(action_plan) | 42 Korean legal APIs → 17 MCP tools
 repoUrl: 'https://github.com/chrisryugj/korean-law-mcp'
 verifications: []
-lastUpdated: '2026-05-25T00:49:36.149Z'
+lastUpdated: '2026-05-26T00:47:26.806Z'
 ogImage: ''
 ---
 
