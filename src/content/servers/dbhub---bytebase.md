@@ -5,7 +5,7 @@ description: >-
   Server, MariaDB, SQLite.
 repoUrl: 'https://github.com/bytebase/dbhub'
 verifications: []
-lastUpdated: '2026-06-01T00:54:25.429Z'
+lastUpdated: '2026-06-02T00:54:26.810Z'
 ogImage: ''
 ---
 
