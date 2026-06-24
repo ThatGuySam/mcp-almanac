@@ -6,7 +6,7 @@ description: >-
   legal APIs → 9 MCP tools
 repoUrl: 'https://github.com/chrisryugj/korean-law-mcp'
 verifications: []
-lastUpdated: '2026-06-23T00:49:32.344Z'
+lastUpdated: '2026-06-24T00:45:48.152Z'
 ogImage: ''
 ---
 
