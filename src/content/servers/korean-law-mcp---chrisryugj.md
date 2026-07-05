@@ -1,12 +1,9 @@
 ---
 title: korean-law-mcp
-description: >-
-  국가법령정보MCP v4.4 | 법제처 42개 API → 9개 MCP 도구. 법령·판례·조례·조약 + 다단계
-  리서치(legal_research) + 정밀분석(legal_analysis: 인용검증·판례생사·행위시법·영향그래프) | 42 Korean
-  legal APIs → 9 MCP tools
+description: 법제처 국가법령정보 MCP — 법령·판례·조례 조회부터 인용 환각 검증까지 · Korean law MCP for LLMs
 repoUrl: 'https://github.com/chrisryugj/korean-law-mcp'
 verifications: []
-lastUpdated: '2026-07-04T02:45:59.817Z'
+lastUpdated: '2026-07-05T02:56:26.365Z'
 ogImage: ''
 ---
 
