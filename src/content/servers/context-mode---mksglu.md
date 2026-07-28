@@ -6,7 +6,7 @@ description: >-
   platforms via MCP + hooks.
 repoUrl: 'https://github.com/mksglu/context-mode'
 verifications: []
-lastUpdated: '2026-07-27T02:45:32.495Z'
+lastUpdated: '2026-07-28T02:24:43.371Z'
 ogImage: ''
 ---
 
