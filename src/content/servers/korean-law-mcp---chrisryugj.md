@@ -5,7 +5,7 @@ description: >-
   law — search statutes, precedents, and ordinances, and verify citations
 repoUrl: 'https://github.com/chrisryugj/korean-law-mcp'
 verifications: []
-lastUpdated: '2026-07-29T02:29:03.884Z'
+lastUpdated: '2026-07-30T02:11:03.045Z'
 ogImage: ''
 ---
 
