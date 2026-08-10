@@ -5,7 +5,7 @@ description: >-
   反检测，可选 CloakBrowser。
 repoUrl: 'https://github.com/zhizhuodemao/js-reverse-mcp'
 verifications: []
-lastUpdated: '2026-08-09T01:36:37.823Z'
+lastUpdated: '2026-08-10T01:39:34.936Z'
 ogImage: ''
 ---
 
