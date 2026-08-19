@@ -5,7 +5,7 @@ description: >-
   research over MCP. No API keys, no cloud, $0/query. Public beta.
 repoUrl: 'https://github.com/KnockOutEZ/wigolo'
 verifications: []
-lastUpdated: '2026-08-17T01:08:36.408Z'
+lastUpdated: '2026-08-19T01:07:30.856Z'
 ogImage: ''
 ---
 
