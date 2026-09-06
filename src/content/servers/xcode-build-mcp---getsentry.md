@@ -5,7 +5,7 @@ description: >-
   use when working on iOS and macOS projects.
 repoUrl: 'https://github.com/getsentry/XcodeBuildMCP'
 verifications: []
-lastUpdated: '2026-09-05T03:00:27.852Z'
+lastUpdated: '2026-09-06T03:00:05.427Z'
 ogImage: ''
 ---
 
