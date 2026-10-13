@@ -7,7 +7,7 @@ description: >-
   Store.
 repoUrl: 'https://github.com/apify/apify-mcp-server'
 verifications: []
-lastUpdated: '2026-10-12T04:24:25.565Z'
+lastUpdated: '2026-10-13T05:32:43.165Z'
 ogImage: ''
 ---
 
