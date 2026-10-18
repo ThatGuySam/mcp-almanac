@@ -5,7 +5,7 @@ description: >-
   use when working on iOS and macOS projects.
 repoUrl: 'https://github.com/getsentry/MobileBuildMCP'
 verifications: []
-lastUpdated: '2026-10-17T03:02:44.349Z'
+lastUpdated: '2026-10-18T03:05:14.723Z'
 ogImage: ''
 ---
 
