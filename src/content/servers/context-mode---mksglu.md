@@ -7,7 +7,7 @@ description: >-
   Zero telemetry.
 repoUrl: 'https://github.com/mksglu/context-mode'
 verifications: []
-lastUpdated: '2026-11-03T05:25:18.343Z'
+lastUpdated: '2026-11-04T04:53:54.756Z'
 ogImage: ''
 ---
 
