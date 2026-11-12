@@ -1,11 +1,11 @@
 ---
 title: n8n-mcp
 description: >-
-  A MCP for Claude Desktop / Claude Code / Windsurf / Cursor to build n8n
-  workflows for you 
+  MCP server that lets Claude, ChatGPT, Cursor and other AI assistants operate
+  n8n: debug, edit, validate, test and build workflows on any n8n instance
 repoUrl: 'https://github.com/czlonkowski/n8n-mcp'
 verifications: []
-lastUpdated: '2026-11-11T04:46:23.401Z'
+lastUpdated: '2026-11-12T05:48:42.777Z'
 ogImage: ''
 ---
 
