@@ -5,7 +5,7 @@ description: >-
   n8n: debug, edit, validate, test and build workflows on any n8n instance
 repoUrl: 'https://github.com/czlonkowski/n8n-mcp'
 verifications: []
-lastUpdated: '2026-11-12T05:48:42.777Z'
+lastUpdated: '2026-11-13T05:08:32.949Z'
 ogImage: ''
 ---
 
